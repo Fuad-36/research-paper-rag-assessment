@@ -1,0 +1,18 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pydantic
+python-multipart
+qdrant-client
+sentence-transformers
+transformers
+torch
+fitz   # PyMuPDF (pip install pymupdf) -> but package name is "pymupdf"
+pymupdf
+requests
+python-dotenv
+tqdm
+nltk
+more-itertools
+pytest
