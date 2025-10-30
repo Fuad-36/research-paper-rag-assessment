@@ -42,7 +42,7 @@ class Chunk(Base):
     page_end = Column(Integer, nullable=True)
     section = Column(String, nullable=True)
     text = Column(Text, nullable=False)
-    metadata = Column(JSON, nullable=True)
+    meta = Column("metadata", JSON, nullable=True) 
     qdrant_id = Column(String, index=True, nullable=True)  # vector id in Qdrant
     embedding_dim = Column(Integer, nullable=True)
 

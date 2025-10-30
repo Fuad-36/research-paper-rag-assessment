@@ -1,17 +1,64 @@
-# 🎓 Research Paper Assistant - RAG System Assessment
+# 🚀 RAG Research Assistant (FastAPI + Qdrant + Postgres + Ollama)
 
-## 🎯 Objective
-Build a production-ready RAG (Retrieval-Augmented Generation) service that helps researchers efficiently query and understand academic papers.
+A Retrieval-Augmented Generation (RAG) backend to ingest academic PDFs, index them into Qdrant, and answer researcher queries referencing paper sections and pages.
 
-## 💡 The Problem
-Researchers waste hours reading through multiple papers to find:
-- Specific methodologies and approaches
-- Key findings and results
-- Dataset information and benchmarks
-- Comparative analysis across papers
-- Citations and references
+---
 
-**Your mission**: Build an intelligent assistant that does this in seconds.
+## 🧩 Table of Contents
+
+- [Features](#features)
+- [Architecture](#architecture)
+- [Setup Instructions](#setup-instructions)
+- [Running the Application](#running-the-application)
+- [API Documentation](#api-documentation)
+- [Example Requests](#example-requests)
+- [Postman Collection](#postman-collection)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Features
+
+- PDF ingestion with section-aware chunking
+- Embeddings via sentence-transformers
+- Vector store: Qdrant
+- LLM: Ollama (configurable)
+- REST API endpoints for ingestion, query, paper management, analytics
+
+---
+
+## 🛠️ Setup Instructions
+
+```bash
+ollama pull llama3
+ollama serve 
+
+docker run -p 6333:6333 qdrant/qdrant
+
+#python 3.10<3.13
+python version: 3.11
+py -3.11 -m venv venv  
+.\venv\Scripts\Activate
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements.txt
+pip uninstall fitz PyMuPDF -y
+pip install PyMuPDF
+
+uvicorn src.main:app --reload
+
+
+```
+
+
+
+
+
+
+
+
+
+
 
 ---
 
