@@ -20,17 +20,30 @@ def build_prompt(question: str, contexts: List[Dict[str, Any]]) -> str:
         ctx_texts.append(header + "\n" + c.get("text", ""))
     context_block = "\n\n---\n\n".join(ctx_texts) if ctx_texts else "No context available."
     prompt = f"""
-You are a helpful assistant. Answer the question using the provided paper excerpts and return ONLY a single JSON object (no commentary) with these keys:
-- answer: string (Provide a concise answer)
-- citations: list of objects [{"{"}paper_title: str, section: str, page: int, relevance_score: float{"}"}]
-- sources_used: list[str] (filenames)
-- confidence: float (0.0-1.0)
+You are a precise assistant for research question answering. 
+You MUST answer STRICTLY in **valid JSON format only**, with NO explanations, markdown, or extra text.
+
+Output JSON **MUST contain exactly these keys**:
+- answer (string)
+- citations (list of objects with: paper_title (find the largest font with more than 3 words in first page, MUST contain at least 3 words ), section (MUST not be empty), page (MUST not be null) , relevance_score (MUST not be null))
+- sources_used (list of strings)
+- confidence (float between 0.0 and 1.0)
+
+Do not add any text before or after the JSON object.
 
 Context:
 {context_block}
 
 Question: {question}
-Use only the provided excerpts — do NOT invent sources. If the answer is not contained in the excerpts, return an empty answer object as specified below.
+
+If the context does not provide enough information, return:
+
+{{
+  "answer": "The provided papers do not contain sufficient information to answer this question.",
+  "citations": [],
+  "sources_used": [],
+  "confidence": 0.0
+}}
 """
     return prompt.strip()
 
@@ -160,6 +173,5 @@ def run_query(question: str, top_k: int = 5, paper_ids: Optional[List[int]] = No
         "answer": answer,
         "citations": citations,
         "sources_used": [s for s in sources if s],
-        "confidence": float(confidence) if confidence is not None else 0.5,
-        "response_time_ms": duration
+        "confidence": float(confidence) if confidence is not None else 0.5
     }

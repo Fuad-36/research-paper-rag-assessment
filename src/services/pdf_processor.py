@@ -1,7 +1,7 @@
 import fitz  # pymupdf
 import re
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional,Callable
 from src.config import settings
 import nltk
 
@@ -9,15 +9,15 @@ import nltk
 logger = logging.getLogger(__name__)
 
 # Ensure punkt tokenizer is available — try to find, otherwise attempt download
-try:
-    nltk.data.find("tokenizers/punkt")
-except LookupError:
+for resource in ["punkt", "punkt_tab"]:
     try:
-        nltk.download("punkt")
-        logger.info("Downloaded NLTK 'punkt' tokenizer.")
-    except Exception as e:
-        # Log but continue; we'll fallback to naive sentence split if needed
-        logger.warning("Failed to download NLTK 'punkt' tokenizer: %s", e)
+        nltk.data.find(f"tokenizers/{resource}")
+    except LookupError:
+        try:
+            nltk.download(resource)
+            logger.info("Downloaded NLTK tokenizer: %s", resource)
+        except Exception as e:
+            logger.warning("Failed to download NLTK tokenizer '%s': %s", resource, e)
 
 from nltk.tokenize import sent_tokenize  # may still raise if not available
 
@@ -288,7 +288,7 @@ def extract_pdf(file_path: str) -> Dict[str, Any]:
     year: Optional[int] = None
     debug = {"first_lines": _first_nonempty_lines(first, 20)}
 
-    # title heuristics (unchanged)
+    # title heuristics 
     try:
         doc2 = fitz.open(file_path)
         if doc2.page_count > 0:

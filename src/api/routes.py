@@ -21,15 +21,13 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def _sanitize_filename(original_name: str) -> str:
     """
-    Return a safe filename (basename + if needed a uuid prefix to avoid collisions).
+    Return a safe filename (basename only — UUID prefix added later if DB says it's duplicate).
     """
     base = os.path.basename(original_name or "")
     if not base:
         base = f"paper_{uuid.uuid4().hex}.pdf"
-    # keep extension if present
-    if os.path.exists(os.path.join(UPLOAD_DIR, base)):
-        base = f"{uuid.uuid4().hex}_{base}"
     return base
+
 
 
 @router.post("/api/papers/upload")
@@ -301,7 +299,9 @@ def delete_paper(paper_id: int):
         try:
             qdrant_service.delete_vectors_for_paper(filename)
         except Exception:
+            db.rollback()
             logger.exception("Failed to delete vectors for paper %s in Qdrant", filename)
+            raise HTTPException(status_code=500, detail="failed to delete Qdrant vectors")
             # proceed to delete DB row anyway (alternatively, you could abort)
         try:
             db.delete(p)
@@ -354,16 +354,33 @@ def analytics_popular(limit: int = 20):
     db = SessionLocal()
     from collections import Counter
 
+    # define excluded/common terms
+    excluded_terms = {
+        
+        # common stopwords
+        "a", "an", "the", "and", "or", "is", "are", "was", "were",
+        "to", "of", "in", "on", "for", "with", "as", "by", "from",
+        "this", "that", "it", "at", "be", "can", "do", "how", "what",
+        "why", "when", "where", "which", "who", "whom", "about", "into",
+        "your", "you", "we", "they", "i","me", "has", "have", "had", "will", "would", "should", "could", "may", "might"
+    }
+
     try:
         qs = db.query(QueryHistory).order_by(QueryHistory.created_at.desc()).limit(200).all()
-        
 
         words = Counter()
         for q in qs:
             text = q.query_text if hasattr(q, "query_text") else (q[1] if len(q) > 1 else "")
             for w in (text or "").lower().split():
-                words[w.strip(".,?()")] += 1
-        top = words.most_common(limit)
+                word = w.strip(".,?()")
+                if word and word not in excluded_terms:
+                    words[word] += 1
+
+        # only keep words with count > 3
+        filtered = [(word, count) for word, count in words.items() if count > 3]
+
+        # sort and limit results
+        top = sorted(filtered, key=lambda x: x[1], reverse=True)[:limit]
         return {"top_terms": top}
     finally:
         db.close()

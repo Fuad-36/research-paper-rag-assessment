@@ -89,7 +89,11 @@ class QdrantService:
         """Delete points whose payload 'paper_filename' equals the given filename."""
         try:
             q_filter = rest.Filter(must=[rest.FieldCondition(key="paper_filename", match=rest.MatchValue(value=paper_filename))])
-            self.client.delete(collection_name=self.collection_name, filter=q_filter)
+            self.client.delete(
+                collection_name=self.collection_name,
+                points_selector=rest.FilterSelector(filter=q_filter)
+            )
+
         except Exception as e:
             logger.exception("Failed to delete vectors for paper '%s': %s", paper_filename, e)
             raise RuntimeError(f"Qdrant delete failed: {e}") from e

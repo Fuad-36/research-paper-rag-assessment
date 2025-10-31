@@ -169,3 +169,5 @@ def get_llm_client() -> OllamaClient:
     (You can wrap this with your own singleton if you want a single client per process.)
     """
     return OllamaClient()
+
+
